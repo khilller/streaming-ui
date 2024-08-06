@@ -1,4 +1,4 @@
-import { createAI, streamUI } from "ai/rsc";
+import { createAI, getMutableAIState, streamUI } from "ai/rsc";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { Flights } from "@/components/stream/flights";
@@ -6,6 +6,9 @@ import { searchRecipes } from "./recipe";
 import { Recipe, RecipeCard } from "@/components/stream/SingleRecipe";
 import { searchByType } from "./recipetype";
 import { RecipeByType, RecipeListDisplay} from "@/components/stream/RecipesByType";
+import { ReactNode } from "react";
+import { nanoid } from "nanoid";
+import { SystemMessage } from "@/components/chat/SystemMessage";
 
 
 //this is to search for recipe by ingredient
@@ -16,17 +19,35 @@ interface RecipeSearchResults {
     limit: number;
 }
 
+export type ServerMessage = {
+    role: "user" | "assistant";
+    content: string;
+  }
+  
+export type ClientMessage = {
+    id: number;
+    role: "user" | "assistant";
+    display: ReactNode;
+  }
 
 
 
-export async function submitUserMessage(input: string) {
+export async function continueConversation(input: string): Promise<ClientMessage> {
     'use server';
+
+    const histroy = getMutableAIState();
 
     const ui = await streamUI({
         model: openai('gpt-4o'),
         system: 'you are an expert sous chef that can help find a recipe',
-        prompt: input,
-        text: async ({ content }) => <div>{content}</div>,
+        messages: [...histroy.get(), { role: 'user', content: input }],
+        text: ({content, done}) => {
+            if (done) {
+                const nMessages: ServerMessage[] = [...histroy.get(), {role: 'assistant', content}];
+                histroy.done(nMessages);
+            }
+            return <div>{content}</div>
+        },
         tools: {
             searchForRecipes: {
                 description: 'Search for recipes based on a ingredient',
@@ -36,6 +57,14 @@ export async function submitUserMessage(input: string) {
                 generate: async function* ({ ingredient }) {
                     yield `Searching for recipes with ${ingredient}...`;
                     const results:RecipeSearchResults  = await searchRecipes(ingredient);
+
+                    if (!results.recipes || results.recipes.length === 0) {
+                        return (
+                            <div className="text-center p-4 bg-yello-100 ronded-lg"> 
+                                <p className="text-yellow-700">No recipes found for {ingredient}. Try another ingredient.</p>
+                            </div>
+                        )
+                    }
 
                     return (
                         <div>
@@ -59,7 +88,6 @@ export async function submitUserMessage(input: string) {
                     return (
                         <div className="px-4 py-8 flex flex-col items-start w-full" >
                             <RecipeListDisplay {...results} />
-
                         </div>
                     )
                 }
@@ -67,14 +95,18 @@ export async function submitUserMessage(input: string) {
         }
     })
 
-    return ui.value
+    return {
+        id: Date.now(),
+        role: 'assistant',
+        display: ui.value
+    }
 }
 
 
-export const AI = createAI<any[], React.ReactNode[]>({
+export const AI = createAI<ServerMessage[], ClientMessage[]>({
+    actions: {
+      continueConversation,
+    },
     initialAIState: [],
     initialUIState: [],
-    actions: {
-        submitUserMessage,
-    }
-})
+  });

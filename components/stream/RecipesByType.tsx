@@ -21,7 +21,7 @@ export interface RecipeByType {
 
 const TypeCard: React.FC<RBT> = ({ name, tags}) => {
 
-    const { submitUserMessage } = useActions();
+    const { continueConversation } = useActions();
     const [_, setMessages] = useUIState();
 
     return (
@@ -30,7 +30,7 @@ const TypeCard: React.FC<RBT> = ({ name, tags}) => {
                 <div 
                     className='cursor-pointer'
                     onClick={async () => {
-                        const display = await submitUserMessage(
+                        const display = await continueConversation(
                             `searchRecipes ${name}`
                         );
                         setMessages((messages: ReactNode[]) => [...messages, display]);
