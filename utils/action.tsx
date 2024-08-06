@@ -47,7 +47,7 @@ export async function submitUserMessage(input: string) {
                 }
             },
             searchByType: {
-                description: 'Search for recipes based on a type',
+                description: 'Search for recipes based on a recipe type',
                 parameters: z.object({
                     type: z.string().describe('The type of recipe to search for'),
                 }),
