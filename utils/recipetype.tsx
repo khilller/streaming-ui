@@ -11,7 +11,7 @@ export const searchByType = cache(async (query: string) => {
         }
 
         const data = await response.json()
-        console.log('data:', data)
+        //console.log('data:', data)
         return data
 
     } catch (error) {
