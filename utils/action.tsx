@@ -9,6 +9,7 @@ import { RecipeByType, RecipeListDisplay} from "@/components/stream/RecipesByTyp
 import { ReactNode } from "react";
 import { nanoid } from "nanoid";
 import { SystemMessage } from "@/components/chat/SystemMessage";
+import { getTasks } from "./taskAction";
 
 
 //this is to search for recipe by ingredient
@@ -106,6 +107,7 @@ export async function continueConversation(input: string): Promise<ClientMessage
 export const AI = createAI<ServerMessage[], ClientMessage[]>({
     actions: {
       continueConversation,
+      getTasks,
     },
     initialAIState: [],
     initialUIState: [],
