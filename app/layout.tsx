@@ -6,8 +6,8 @@ import { AI } from "@/utils/action";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Recipe Assistant",
-  description: "Find all the recipes you need!",
+  title: "Office Assistant",
+  description: "Find all the tasks you need to do.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
